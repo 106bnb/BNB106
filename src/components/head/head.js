@@ -33,7 +33,7 @@ class Header extends Component {
         let {isLogin, account} = this.state;
         return <div className="header">
             <div className="title">
-                <img src="/assets/images/logo.gif"/>
+                <img src="../../../assets/images/logo.gif"/>
                 <span>BNB 1.06</span>
             </div>
             <div className="account">

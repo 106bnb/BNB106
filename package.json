@@ -2,7 +2,7 @@
   "name": "bp1.06",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/106bnb/BNB106",
+  "homepage": "https://106bnb.github.io/BNB106",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
