@@ -1,22 +1,36 @@
 import { ethers, utils } from "ethers";
 import { formatAddress, getQueryVariable } from "../../utils/address";
 import { formatNumberToHours } from "../../utils/date";
-import { BP106, BP106Proxy, getAccount, initContract, PlatformAddressContract } from "../../web3/eth";
+import { BP106, BP106Proxy, getAccount, initContract, PlatformAddressContract, provider } from "../../web3/eth";
 import { Button, message, Modal, Spin } from 'antd';
 import "./main.css";
+import Clipboard from 'clipboard';
 import { EXPOLER } from "../../config";
+import { PlatformAddress } from "../../web3/address";
 const { Component } = require("react");
 
+const copy = new Clipboard('.copy_btn');
 class Main extends Component {
     constructor() {
         super();
         this.state = {
+            totalIncome: 0,
+            platform1AmountWithdraw: 0,
+            platform2AmountWithdraw: 0,
+            platform3AmountWithdraw: 0,
+            platform4AmountWithdraw: 0,
+            platform5AmountWithdraw: 0,
+            platformBalance: 0,
             platformAddress1Amount: 0,
             platformAddress2Amount: 0,
             platformAddress3Amount: 0,
+            platformAddress4Amount: 0,
+            platformAddress5Amount: 0,
             platform1Address: "",
             platform2Address: "",
             platform3Address: "",
+            platform4Address: "",
+            platform5Address: "",
             isSpinning: true,
             account: "",
             user: null,
@@ -96,7 +110,7 @@ class Main extends Component {
         // let financialReferrerOfUser = await BP106Proxy.financialReferrerOfUser(account);
         let usersOfReferrer = await BP106Proxy.getUsersOfReferrer(account);
         usersOfReferrer = JSON.parse(JSON.stringify(usersOfReferrer));
-        for (let i = 0; i < usersOfReferrer.length; i++) {
+        for (let i = 0; i < usersOfReferrer >= 2 ? 2 : usersOfReferrer.length; i++) {
             let item = {
                 account: usersOfReferrer[i]
             }
@@ -122,26 +136,60 @@ class Main extends Component {
             })
         }
 
-        const platformAddress1Amount = await PlatformAddressContract.platform1Amount();
-        const platformAddress2Amount = await PlatformAddressContract.platform2Amount();
-        const platformAddress3Amount = await PlatformAddressContract.platform3Amount();
         const platform1Address = await PlatformAddressContract.platform1();
         const platform2Address = await PlatformAddressContract.platform2();
         const platform3Address = await PlatformAddressContract.platform3();
+        const platform4Address = await PlatformAddressContract.platform4();
+        const platform5Address = await PlatformAddressContract.platform5();
 
-        const receiveAddress = await BP106Proxy.receiveAddress();
-        console.log(receiveAddress);
+        if (account.toLocaleLowerCase() == platform1Address.toLocaleLowerCase() ||
+        account.toLocaleLowerCase() == platform2Address.toLocaleLowerCase() ||
+        account.toLocaleLowerCase() == platform3Address.toLocaleLowerCase() ||
+        account.toLocaleLowerCase() == platform4Address.toLocaleLowerCase() ||
+        account.toLocaleLowerCase() == platform5Address.toLocaleLowerCase() ) {
+            const platformAddress1Amount = await PlatformAddressContract.platform1Amount();
+            const platformAddress2Amount = await PlatformAddressContract.platform2Amount();
+            const platformAddress3Amount = await PlatformAddressContract.platform3Amount();
+            const platformAddress4Amount = await PlatformAddressContract.platform4Amount();
+            const platformAddress5Amount = await PlatformAddressContract.platform5Amount();
+    
+            const platformBalance = await provider.getBalance(PlatformAddress);
+    
+            const platform1AmountWithdraw = await PlatformAddressContract.platform1AmountWithdraw();
+            const platform2AmountWithdraw = await PlatformAddressContract.platform2AmountWithdraw();
+            const platform3AmountWithdraw = await PlatformAddressContract.platform3AmountWithdraw();
+            const platform4AmountWithdraw = await PlatformAddressContract.platform4AmountWithdraw();
+            const platform5AmountWithdraw = await PlatformAddressContract.platform5AmountWithdraw();
+    
+            const totalIncome = await PlatformAddressContract.totalIncome();
+
+            this.setState({
+                platform1AmountWithdraw,
+                platform2AmountWithdraw,
+                platform3AmountWithdraw,
+                platform4AmountWithdraw,
+                platform5AmountWithdraw,
+                platformAddress1Amount,
+                platformAddress2Amount,
+                platformAddress3Amount,
+                platformAddress4Amount,
+                platformAddress5Amount,
+                platform1Address,
+                platform2Address,
+                platform3Address,
+                platform4Address,
+                platform5Address,
+                platformBalance,
+                totalIncome
+            })
+        }
+
+      
 
         this.setState({
             // userReward,
             // user: userInfo,
             serialNumberOfUser: serialNumberOfUser,
-            platformAddress1Amount,
-            platformAddress2Amount,
-            platformAddress3Amount,
-            platform1Address,
-            platform2Address,
-            platform3Address,
             directAmount,
             seePointAmount,
             bossAmount,
@@ -158,7 +206,7 @@ class Main extends Component {
             serialNumberOfUser_pool,
             countUsersOfReferrer,
             usersOfReferrer,
-            isSpinning: false
+            isSpinning: false,
             // sameLevelBoss
         })
     }
@@ -175,8 +223,12 @@ class Main extends Component {
     }
 
     cpLink = async () => {
-        await navigator.clipboard.writeText(window.location.host + "?inviter=" + this.state.account)
-        message.success("复制成功")
+        copy.on('success', e => {
+            message.success("复制成功")
+        });
+        copy.on('error', function (e) {
+            message.error("复制失败")
+        });
     }
 
     deposit = async () => {
@@ -186,7 +238,7 @@ class Main extends Component {
             return;
         }
         message.loading({ content: '参与中...', key: "deposit", duration: 0 });
-        await BP106Proxy.join(inviter == "" || !inviter ? firstAddress : inviter, { value: utils.parseEther("0.0106") })
+        await BP106Proxy.join(inviter == "" || !inviter ? firstAddress : inviter, { value: utils.parseEther("1.06") })
             .then(async (ret) => {
                 await ret.wait().then(async (res) => {
                     console.log(res);
@@ -218,8 +270,9 @@ class Main extends Component {
         await initContract();
         let account = await getAccount();
         this.setState({ account: account })
-        // await BP106Proxy.setToken("0x89877289633C568BCD156E1C800970c49CB7ad65");
+        // await BP106Proxy.initDataForTest();
         await this.getAccountInfo(account);
+
     }
 
     initData = async () => {
@@ -254,7 +307,7 @@ class Main extends Component {
 
     initialize = () => {
         message.loading({ content: "初始化合约中...", key: "initialize", duration: 0 })
-        BP106Proxy.initialize.then(async (ret) => {
+        BP106Proxy.initialize().then(async (ret) => {
             ret.wait().then(() => {
                 message.success({ content: "成功", key: "initialize" })
             }).catch(() => {
@@ -333,6 +386,50 @@ class Main extends Component {
                     message.error({ content: "提现失败", key: "withdraw" })
                 });
                 break;
+            case 4:
+                let { platformAddress4 } = this.state;
+                PlatformAddressContract.withdrawPlatform4(utils.parseEther(platformAddress4)).then((ret) => {
+                    ret.wait().then(() => {
+                        message.success({ content: "提现成功", key: "withdraw" })
+                    }).catch(() => {
+                        message.error({ content: "提现失败", key: "withdraw" })
+                    })
+                }).catch(() => {
+                    message.error({ content: "提现失败", key: "withdraw" })
+                });
+                break;
+            case 5:
+                let { platformAddress5 } = this.state;
+                PlatformAddressContract.withdrawPlatform5(utils.parseEther(platformAddress5)).then((ret) => {
+                    ret.wait().then(() => {
+                        message.success({ content: "提现成功", key: "withdraw" })
+                    }).catch(() => {
+                        message.error({ content: "提现失败", key: "withdraw" })
+                    })
+                }).catch(() => {
+                    message.error({ content: "提现失败", key: "withdraw" })
+                });
+                break;
+        }
+    }
+
+    showWithdrawAmount = (account) => {
+        switch (account) {
+            case this.state.platform1Address:
+                return utils.formatEther(this.state.platform1AmountWithdraw)
+                break;
+            case this.state.platform2Address:
+                return utils.formatEther(this.state.platform2AmountWithdraw)
+                break;
+            case this.state.platform3Address:
+                return utils.formatEther(this.state.platform3AmountWithdraw)
+                break;
+            case this.state.platform4Address:
+                return utils.formatEther(this.state.platform4AmountWithdraw)
+                break;
+            case this.state.platform5Address:
+                return utils.formatEther(this.state.platform5AmountWithdraw)
+                break;
         }
     }
 
@@ -350,14 +447,54 @@ class Main extends Component {
         })
     }
 
+    emergencyWithdraw = async (type) => {
+        message.loading({ content: "提现中....", key: "emergencyWithdraw", duration: 0 })
+        switch (type) {
+            case 1:
+                await BP106Proxy.emergencyWithdraw(utils.parseEther(this.state.emergencyAmount)).then(async (ret) => {
+                    await ret.wait().then(() => {
+                        message.success({ content: "提现成功", key: "emergencyWithdraw"})
+                    }).catch(() => {
+                        message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                    })
+                    
+                }).catch(() => {
+                    message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                })
+                break;
+            case 2:
+                await PlatformAddressContract.emergencyWithdraw(utils.parseEther(this.state.emergencyAmount_platform)).then(async (ret) => {
+                    await ret.wait().then(() => {
+                        message.success({ content: "提现成功", key: "emergencyWithdraw"})
+                    }).catch(() => {
+                        message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                    })
+                    
+                }).catch(() => {
+                    message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                })
+                break;
+        }
+    }
+
     showMembers = async () => {
-
-
         let hide = message.loading({ content: "加载数据...", key: "showMembers", duration: 0 });
 
-        let { usersOfReferrer } = this.state;
+        let usersOfReferrer = await BP106Proxy.getUsersOfReferrer(this.state.account);
+        usersOfReferrer = JSON.parse(JSON.stringify(usersOfReferrer));
+        for (let i = 0; i < usersOfReferrer.length; i++) {
+            let item = {
+                account: usersOfReferrer[i]
+            }
+            let id = await BP106Proxy.serialNumberOfUser(usersOfReferrer[i]);
+            let level = await BP106Proxy.identityOfUser(usersOfReferrer[i]);
+            item.id = id / 1;
+            item.level = level / 1;
+            usersOfReferrer[i] = item;
+        }
+
+        
         let members = [];
-        console.log(usersOfReferrer);
         for (let i = 0; i < usersOfReferrer.length; i++) {
             let userJoinTime = await BP106Proxy.userJoinTime(usersOfReferrer[i].account);
             usersOfReferrer[i].userJoinTime = userJoinTime / 1;
@@ -374,6 +511,13 @@ class Main extends Component {
 
     render() {
         let {
+            totalIncome,
+            platform1AmountWithdraw,
+            platform2AmountWithdraw,
+            platform3AmountWithdraw,
+            platform4AmountWithdraw,
+            platform5AmountWithdraw,
+            platformBalance,
             owner,
             countUsersOfReferrer,
             directAmount,
@@ -402,17 +546,20 @@ class Main extends Component {
             platformAddress1Amount,
             platformAddress2Amount,
             platformAddress3Amount,
+            platformAddress4Amount,
+            platformAddress5Amount,
             platform1Address,
             platform2Address,
             platform3Address,
+            platform4Address,
+            platform5Address,
             rewardUserId } = this.state;
-
         poolBalance = utils.formatEther(poolBalance);
         return <div className="container">
             <div className="row">
                 <div className="item">
                     <div className="bp-left">
-                        <img src="/assets/icons/coutdown.png" />
+                        <img src="./assets/icons/coutdown.png" />
                         <span>倒计时</span>
                     </div>
                     <div className="right">
@@ -421,7 +568,7 @@ class Main extends Component {
                 </div>
                 <div className="item">
                     <div className="bp-left">
-                        <img src="/assets/icons/member.png" />
+                        <img src="./assets/icons/member.png" />
                         <span>当前身份</span>
                     </div>
                     <div className="right">
@@ -430,7 +577,7 @@ class Main extends Component {
                 </div>
                 <div className="item">
                     <div className="bp-left">
-                        <img src="/assets/icons/member.png" />
+                        <img src="./assets/icons/member.png" />
                         <span>参与编号</span>
                     </div>
                     <div className="right">
@@ -440,7 +587,7 @@ class Main extends Component {
             </div>
             <div className="row second">
                 <h4 className="second-title">
-                    <img src="/assets/icons/location.png" />
+                    <img src="./assets/icons/location.png" />
                     <span>当前排位 {serialNumber / 1}</span>
                 </h4>
                 <div className="buy_area">
@@ -452,12 +599,12 @@ class Main extends Component {
                     <p>我的推广</p>
                     <div className="members">
                         {
-                            usersOfReferrer.slice(0, 2).map((v, i) => {
+                            usersOfReferrer.map((v, i) => {
                                 return <div className="members_count" key={i}>
 
                                     {
                                         <div onClick={() => this.showBoss(v)}>
-                                            <div><img src="/assets/icons/member_one.png" /></div>
+                                            <div><img src="./assets/icons/member_one.png" /></div>
                                             <div>
                                                 {formatAddress(v.account)}
                                                 <div>{i == 0 ? (v.level == 1 ? "AGENT A" : "BOSS A") : (v.level == 1 ? "AGENT B" : "BOSS B")}</div>
@@ -471,7 +618,7 @@ class Main extends Component {
 
                             {
                                 countUsersOfReferrer / 1 == 0 ? null : <div onClick={this.showMembers}>
-                                    <div><img src="/assets/icons/team_member.png" /></div>
+                                    <div><img src="./assets/icons/team_member.png" /></div>
                                     <div>
                                         直推人数：{countUsersOfReferrer / 1}
                                     </div>
@@ -485,13 +632,13 @@ class Main extends Component {
                 </div>
                 <div className="inviter">
                     <p>邀请链接</p>
-                    <p className="inviter_link">{identityOfUser / 1 == 0 ? "需先参与" : window.location.host + "?inviter=" + formatAddress(account)}</p>
-                    <button className="copy_btn" onClick={this.cpLink}>复制</button>
+                    <p className="inviter_link">{identityOfUser / 1 == 0 ? "需先参与" : window.location.host + window.location.pathname + "?inviter=" + formatAddress(account)}</p>
+                    <button className="copy_btn" onClick={this.cpLink} data-clipboard-text={window.location.host + window.location.pathname + "?inviter=" + account}>复制</button>
                 </div>
             </div>
-            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('/assets/images/bg1.png')" }}>
+            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('./assets/images/bg1.png')" }}>
                 <h4 className="second-title">
-                    <img src="/assets/icons/crown.png" />
+                    <img src="./assets/icons/crown.png" />
                     <span>奖池</span>
                 </h4>
                 <p>
@@ -511,9 +658,9 @@ class Main extends Component {
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('/assets/images/bg2.png')" }}>
+            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('./assets/images/bg2.png')" }}>
                 <h4 className="second-title">
-                    <img src="/assets/icons/detail.png" style={{ width: "15px" }} />
+                    <img src="./assets/icons/detail.png" style={{ width: "15px" }} />
                     <span>我的收益明细</span>
                 </h4>
 
@@ -558,16 +705,20 @@ class Main extends Component {
                 </div> */}
                 </div>
             </div>
-            <div className="row" style={{ display: isOwner ? "block" : "none", backgroundSize: "cover", backgroundImage: "url('/assets/images/bg1.png')" }}>
+            <div style={{ display: owner == "0x" + "0".repeat(40) ? "block" : "none" }}>
+                <p></p>
+                <p>初始化合约</p>
+                <button onClick={this.initialize}>执行</button>
+            </div>
+            {/* <div className="row" style={{ display: isOwner ? "block" : "none", backgroundSize: "cover", backgroundImage: "url('./assets/images/bg1.png')" }}>
                 <h4 className="second-title">
-                    <img src="/assets/icons/crown.png" />
-                    <span>权限设置</span>
+                    <img src="./assets/icons/crown.png" />
+                    <span>VIP</span>
+                    <div style={{ float: "right", color: "#fff" }}>
+                        累计: {utils.formatEther(platformBalance)} BNB
+                    </div>
                 </h4>
-                <div style={{ display: owner == "0x" + "0".repeat(40) ? "display" : "none" }}>
-                    <p></p>
-                    <p>初始化合约</p>
-                    <button onClick={this.initialize}>执行</button>
-                </div>
+
                 <div>
                     <p></p>
                     <p>初始化数据</p>
@@ -594,30 +745,56 @@ class Main extends Component {
 
                 <div>
                     <p></p>
+                    <p>紧急提现, 余额：{poolBalance} BNB</p>
+                    <input placeholder="提现数量" onChange={this.handleChange} name="emergencyAmount" />
+                    &nbsp;
+                    <button onClick={() => this.emergencyWithdraw(1)}>执行</button>
+                </div>
+
+                <div>
+                    <p></p>
+                    <p>项目钱包紧急提现, 余额：{utils.formatEther(platformBalance)} BNB</p>
+                    <input placeholder="提现数量" onChange={this.handleChange} name="emergencyAmount_platform" />
+                    &nbsp;
+                    <button onClick={() => this.emergencyWithdraw(2)}>执行</button>
+                </div>
+
+                <div>
+                    <p></p>
                     <p>项目地址</p>
-                    <input placeholder="项目地址1" onChange={this.handleChange} name="address1" />
-                    <input placeholder="项目地址2" onChange={this.handleChange} name="address2" />
-                    <input placeholder="项目地址3" onChange={this.handleChange} name="address3" />
+                    <input placeholder="项目地址1" onChange={this.handleChange} name="address1" />&nbsp;<span className="rate">33.33%</span>
+                    <input placeholder="项目地址2" onChange={this.handleChange} name="address2" />&nbsp;<span className="rate">33.33%</span>
+                    <input placeholder="项目地址3" onChange={this.handleChange} name="address3" />&nbsp;<span className="rate">16.66%</span>
+                    <input placeholder="项目地址4" onChange={this.handleChange} name="address4" />&nbsp;<span className="rate">8.33%</span>
+                    <input placeholder="项目地址5" onChange={this.handleChange} name="address5" />&nbsp;<span className="rate">8.33%</span>
                     <br />
                     <button onClick={this.setPlatformAddress}>执行</button>
                 </div>
 
-
-
-            </div>
+            </div> */}
 
             <div className="row"
-            style={{display:platform1Address.toLocaleLowerCase() == account.toLocaleLowerCase() || 
-                platform2Address.toLocaleLowerCase() == account.toLocaleLowerCase() || 
-                platform3Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" :"none"}}
+                style={{
+                    display: platform1Address.toLocaleLowerCase() == account.toLocaleLowerCase() ||
+                        platform2Address.toLocaleLowerCase() == account.toLocaleLowerCase() ||
+                        platform3Address.toLocaleLowerCase() == account.toLocaleLowerCase() ||
+                        platform4Address.toLocaleLowerCase() == account.toLocaleLowerCase() ||
+                        platform5Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none"
+                }}
             >
                 <h4 className="second-title">
-                    <img src="/assets/icons/crown.png" />
-                    <span>项目方操作</span>
+                    <img src="./assets/icons/crown.png" />
+                    <span>VIP提现</span>
+                    <div style={{ float: "right", color: "#fff" }}>
+                        累计: {utils.formatEther(totalIncome)} BNB
+                    </div>
                 </h4>
-                <div style={{ display: platform1Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}>
+                <div
+                    style={{ display: platform1Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}
+                >
                     <p></p>
-                    <p>项目地址1提现, {utils.formatEther(platformAddress1Amount)} BNB</p>
+                    <p>已提现：{utils.formatEther(platform1AmountWithdraw)} BNB</p>
+                    <p>VIP地址余额: {utils.formatEther(platformAddress1Amount)} BNB</p>
                     <input placeholder="提现数量" onChange={this.handleChange} name="platformAddress1" />
                     &nbsp;
                     <button onClick={() => this.withdraw(1)}>执行</button>
@@ -626,7 +803,9 @@ class Main extends Component {
 
                 <div style={{ display: platform2Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}>
                     <p></p>
-                    <p>项目地址2提现, {utils.formatEther(platformAddress2Amount)} BNB</p>
+                    <p>已提现：{utils.formatEther(platform2AmountWithdraw)} BNB</p>
+                    <p>VIP地址余额: {utils.formatEther(platformAddress2Amount)} BNB</p>
+
                     <input placeholder="提现数量" onChange={this.handleChange} name="platformAddress2" />
                     &nbsp;
                     <button onClick={() => this.withdraw(2)}>执行</button>
@@ -635,10 +814,30 @@ class Main extends Component {
 
                 <div style={{ display: platform3Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}>
                     <p></p>
-                    <p>项目地址3提现, {utils.formatEther(platformAddress3Amount)} BNB</p>
+                    <p>已提现：{utils.formatEther(platform3AmountWithdraw)} BNB</p>
+                    <p>VIP地址余额: {utils.formatEther(platformAddress3Amount)} BNB</p>
+
                     <input placeholder="提现数量" onChange={this.handleChange} name="platformAddress3" />
                     &nbsp;
                     <button onClick={() => this.withdraw(3)}>执行</button>
+                </div>
+                <div style={{ display: platform4Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}>
+                    <p></p>
+                    <p>已提现：{utils.formatEther(platform4AmountWithdraw)} BNB</p>
+                    <p>VIP地址余额: {utils.formatEther(platformAddress4Amount)} BNB</p>
+
+                    <input placeholder="提现数量" onChange={this.handleChange} name="platformAddress4" />
+                    &nbsp;
+                    <button onClick={() => this.withdraw(4)}>执行</button>
+                </div>
+                <div style={{ display: platform5Address.toLocaleLowerCase() == account.toLocaleLowerCase() ? "block" : "none" }}>
+                    <p></p>
+                    <p>已提现：{utils.formatEther(platform5AmountWithdraw)} BNB</p>
+                    <p>VIP地址余额: {utils.formatEther(platformAddress5Amount)} BNB</p>
+
+                    <input placeholder="提现数量" onChange={this.handleChange} name="platformAddress5" />
+                    &nbsp;
+                    <button onClick={() => this.withdraw(5)}>执行</button>
                 </div>
             </div>
 

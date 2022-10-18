@@ -162,3 +162,7 @@
 .ant-spin-dot-item{
     background: #f0b90b;
 }
+.rate{
+    display: inline-block;
+    width: 50px;
+}

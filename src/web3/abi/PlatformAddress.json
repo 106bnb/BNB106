@@ -50,6 +50,19 @@
         "type": "event"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "emergencyWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -90,6 +103,19 @@
     },
     {
         "inputs": [],
+        "name": "platform1AmountWithdraw",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "platform2",
         "outputs": [
             {
@@ -104,6 +130,19 @@
     {
         "inputs": [],
         "name": "platform2Amount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "platform2AmountWithdraw",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -142,6 +181,19 @@
     },
     {
         "inputs": [],
+        "name": "platform3AmountWithdraw",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "platform4",
         "outputs": [
             {
@@ -168,6 +220,19 @@
     },
     {
         "inputs": [],
+        "name": "platform4AmountWithdraw",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "platform5",
         "outputs": [
             {
@@ -182,6 +247,19 @@
     {
         "inputs": [],
         "name": "platform5Amount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "platform5AmountWithdraw",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -230,6 +308,19 @@
         "name": "setPlatformAddress",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalIncome",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
