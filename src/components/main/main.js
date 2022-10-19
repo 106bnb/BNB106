@@ -62,66 +62,55 @@ class Main extends Component {
             bossAmount: 0,
             poolAmount: 0,
             serialNumberOfUser_pool: 0,
-            countUsersOfReferrer: 0
+            countUsersOfReferrer: 0,
+            second_collapse: false,
+            thrid_collapse: false,
+            fourth_collapse: false
         }
     }
 
     getAccountInfo = async (account) => {
         // inviter
         let inviter = getQueryVariable("inviter")
+
+        let serialNumberOfUser = await BP106Proxy.serialNumberOfUser(account);
+
+        if (serialNumberOfUser / 1 != 0) {
+            let joinTime = await BP106Proxy.userJoinTime(account);
+            let hours168 = await BP106Proxy.hours168();
+
+            let restTime = (joinTime / 1) + (hours168 / 1);
+
+            setInterval(() => {
+                let now = Math.floor(new Date().getTime() / 1000);
+                let coutdownObj = formatNumberToHours(restTime - now);
+                this.setState({
+                    coutdownObj
+                })
+            }, 1000)
+            let identityOfUser = await BP106Proxy.identityOfUser(account);
+
+
+            this.setState({
+                serialNumberOfUser,
+                identityOfUser,
+            })
+        }
+
         // next reward user id
         let totalId = await BP106Proxy.serialNumber();
-        console.log(totalId)
-        let joinTime = await BP106Proxy.userJoinTime(account);
+        this.setState({
+            totalId,
+        })
         let firstAddress = await BP106Proxy.firstAddress();
-        let hours168 = await BP106Proxy.hours168();
-        let restTime = (joinTime / 1) + (hours168 / 1);
 
-        setInterval(() => {
-            let now = Math.floor(new Date().getTime() / 1000);
-            let coutdownObj = formatNumberToHours(restTime - now);
-            this.setState({
-                coutdownObj
-            })
-        }, 1000)
-
-        let identityOfUser = await BP106Proxy.identityOfUser(account);
-        let serialNumberOfUser = await BP106Proxy.serialNumberOfUser(account);
         let serialNumber = await BP106Proxy.serialNumber();
-
-        let directAmount = await BP106Proxy.directAmount(account);
-        let seePointAmount = await BP106Proxy.seePointAmount(account);
-        let bossAmount = await BP106Proxy.bossAmount(account);
-        let poolAmount = await BP106Proxy.poolAmount(account);
         let poolCurAmount = await BP106Proxy.poolCurAmount();
 
-
-        let poolIndex = await BP106Proxy.poolIndex();
-        let lengthPoolList = await BP106Proxy.lengthPoolList();
         let poolLastRewardUser = await BP106Proxy.poolLastRewardUser();
-        let poolList = lengthPoolList / 1 == 0 ? "0x" + "0".repeat(40) : await BP106Proxy.poolList(poolIndex / 1);
+        // let poolList = lengthPoolList / 1 == 0 ? "0x" + "0".repeat(40) : await BP106Proxy.poolList(poolIndex / 1);
 
         let serialNumberOfUser_pool = await BP106Proxy.serialNumberOfUser(poolLastRewardUser);
-        console.log(poolLastRewardUser, serialNumberOfUser_pool)
-
-
-
-        let countUsersOfReferrer = await BP106Proxy.countUsersOfReferrer(account);
-        // let financialReferrerOfUser = await BP106Proxy.financialReferrerOfUser(account);
-        let usersOfReferrer = await BP106Proxy.getUsersOfReferrer(account);
-        usersOfReferrer = JSON.parse(JSON.stringify(usersOfReferrer));
-        for (let i = 0; i < usersOfReferrer >= 2 ? 2 : usersOfReferrer.length; i++) {
-            let item = {
-                account: usersOfReferrer[i]
-            }
-            let id = await BP106Proxy.serialNumberOfUser(usersOfReferrer[i]);
-            let level = await BP106Proxy.identityOfUser(usersOfReferrer[i]);
-            item.id = id / 1;
-            item.level = level / 1;
-            usersOfReferrer[i] = item;
-        }
-        console.log(usersOfReferrer)
-
 
         const owner = await BP106Proxy.owner();
         if (owner.toLocaleLowerCase() == account.toLocaleLowerCase()) {
@@ -141,73 +130,84 @@ class Main extends Component {
         const platform3Address = await PlatformAddressContract.platform3();
         const platform4Address = await PlatformAddressContract.platform4();
         const platform5Address = await PlatformAddressContract.platform5();
+        this.setState({
+            platform1Address,
+            platform2Address,
+            platform3Address,
+            platform4Address,
+            platform5Address,
+        })
 
         if (account.toLocaleLowerCase() == platform1Address.toLocaleLowerCase() ||
-        account.toLocaleLowerCase() == platform2Address.toLocaleLowerCase() ||
-        account.toLocaleLowerCase() == platform3Address.toLocaleLowerCase() ||
-        account.toLocaleLowerCase() == platform4Address.toLocaleLowerCase() ||
-        account.toLocaleLowerCase() == platform5Address.toLocaleLowerCase() ) {
-            const platformAddress1Amount = await PlatformAddressContract.platform1Amount();
-            const platformAddress2Amount = await PlatformAddressContract.platform2Amount();
-            const platformAddress3Amount = await PlatformAddressContract.platform3Amount();
-            const platformAddress4Amount = await PlatformAddressContract.platform4Amount();
-            const platformAddress5Amount = await PlatformAddressContract.platform5Amount();
-    
+            account.toLocaleLowerCase() == platform2Address.toLocaleLowerCase() ||
+            account.toLocaleLowerCase() == platform3Address.toLocaleLowerCase() ||
+            account.toLocaleLowerCase() == platform4Address.toLocaleLowerCase() ||
+            account.toLocaleLowerCase() == platform5Address.toLocaleLowerCase()) {
+
+            switch (account.toLocaleLowerCase()) {
+                case platform1Address.toLocaleLowerCase():
+                    const platformAddress1Amount = await PlatformAddressContract.platform1Amount();
+                    const platform1AmountWithdraw = await PlatformAddressContract.platform1AmountWithdraw();
+
+                    this.setState({
+                        platformAddress1Amount,
+                        platform1AmountWithdraw
+                    })
+                    break;
+                case platform2Address.toLocaleLowerCase():
+                    const platformAddress2Amount = await PlatformAddressContract.platform2Amount();
+                    const platform2AmountWithdraw = await PlatformAddressContract.platform2AmountWithdraw();
+                    this.setState({
+                        platformAddress2Amount,
+                        platform2AmountWithdraw
+                    })
+                    break;
+                case platform3Address.toLocaleLowerCase():
+                    const platformAddress3Amount = await PlatformAddressContract.platform3Amount();
+                    const platform3AmountWithdraw = await PlatformAddressContract.platform3AmountWithdraw();
+                    this.setState({
+                        platformAddress3Amount,
+                        platform3AmountWithdraw
+                    })
+                    break;
+                case platform4Address.toLocaleLowerCase():
+                    const platformAddress4Amount = await PlatformAddressContract.platform4Amount();
+                    const platform4AmountWithdraw = await PlatformAddressContract.platform4AmountWithdraw();
+                    this.setState({
+                        platformAddress4Amount,
+                        platform4AmountWithdraw
+                    })
+                    break;
+                case platform5Address.toLocaleLowerCase():
+                    const platformAddress5Amount = await PlatformAddressContract.platform5Amount();
+                    const platform5AmountWithdraw = await PlatformAddressContract.platform5AmountWithdraw();
+                    this.setState({
+                        platformAddress5Amount,
+                        platform5AmountWithdraw
+                    })
+                    break;
+            }
+
             const platformBalance = await provider.getBalance(PlatformAddress);
-    
-            const platform1AmountWithdraw = await PlatformAddressContract.platform1AmountWithdraw();
-            const platform2AmountWithdraw = await PlatformAddressContract.platform2AmountWithdraw();
-            const platform3AmountWithdraw = await PlatformAddressContract.platform3AmountWithdraw();
-            const platform4AmountWithdraw = await PlatformAddressContract.platform4AmountWithdraw();
-            const platform5AmountWithdraw = await PlatformAddressContract.platform5AmountWithdraw();
-    
+
             const totalIncome = await PlatformAddressContract.totalIncome();
 
             this.setState({
-                platform1AmountWithdraw,
-                platform2AmountWithdraw,
-                platform3AmountWithdraw,
-                platform4AmountWithdraw,
-                platform5AmountWithdraw,
-                platformAddress1Amount,
-                platformAddress2Amount,
-                platformAddress3Amount,
-                platformAddress4Amount,
-                platformAddress5Amount,
-                platform1Address,
-                platform2Address,
-                platform3Address,
-                platform4Address,
-                platform5Address,
                 platformBalance,
                 totalIncome
             })
         }
 
-      
+
 
         this.setState({
-            // userReward,
-            // user: userInfo,
             serialNumberOfUser: serialNumberOfUser,
-            directAmount,
-            seePointAmount,
-            bossAmount,
-            poolAmount,
-            serialNumberOfUser,
             serialNumber,
-            identityOfUser,
             inviter,
-            totalId,
             firstAddress,
-            // owner,
-            // rewardUserId: rewardUserId < 0 ? 0 : rewardUserId,
             poolBalance: poolCurAmount,
             serialNumberOfUser_pool,
-            countUsersOfReferrer,
-            usersOfReferrer,
             isSpinning: false,
-            // sameLevelBoss
         })
     }
 
@@ -270,7 +270,7 @@ class Main extends Component {
         await initContract();
         let account = await getAccount();
         this.setState({ account: account })
-        // await BP106Proxy.initDataForTest();
+        
         await this.getAccountInfo(account);
 
     }
@@ -447,31 +447,88 @@ class Main extends Component {
         })
     }
 
+    showCollapse = async (lab) => {
+
+        let {account} = this.state;
+        switch (lab) {
+            case 1:
+                if (this.state.second_collapse) {
+                    this.setState({
+                        second_collapse: false
+                    })
+                    return;
+                }
+                let countUsersOfReferrer = await BP106Proxy.countUsersOfReferrer(account);
+                // let financialReferrerOfUser = await BP106Proxy.financialReferrerOfUser(account);
+                let usersOfReferrer = await BP106Proxy.getUsersOfReferrer(account);
+                usersOfReferrer = JSON.parse(JSON.stringify(usersOfReferrer));
+                for (let i = 0; i < (usersOfReferrer.length >= 2 ? 2 : usersOfReferrer.length); i++) {
+                    let item = {
+                        account: usersOfReferrer[i]
+                    }
+
+                    let id = await BP106Proxy.serialNumberOfUser(usersOfReferrer[i]);
+                    let level = await BP106Proxy.identityOfUser(usersOfReferrer[i]);
+                    item.id = id / 1;
+                    item.level = level / 1;
+                    usersOfReferrer[i] = item;
+                }
+                this.setState({
+                    usersOfReferrer,
+                    countUsersOfReferrer,
+                    second_collapse: !this.state.second_collapse
+                })
+            
+                break;
+            // case 2: 
+            //     this.setState({
+            //         thrid_collapse: !this.state.thrid_collapse
+            //     });
+            //     break;
+            case 3:
+                let directAmount = await BP106Proxy.directAmount(account);
+                let seePointAmount = await BP106Proxy.seePointAmount(account);
+                let bossAmount = await BP106Proxy.bossAmount(account);
+                let poolAmount = await BP106Proxy.poolAmount(account);
+
+                this.setState({
+
+                    directAmount,
+                    seePointAmount,
+                    bossAmount,
+                    poolAmount,
+                    fourth_collapse: !this.state.fourth_collapse,
+
+                })
+                break;
+        }
+    }
+
     emergencyWithdraw = async (type) => {
         message.loading({ content: "提现中....", key: "emergencyWithdraw", duration: 0 })
         switch (type) {
             case 1:
                 await BP106Proxy.emergencyWithdraw(utils.parseEther(this.state.emergencyAmount)).then(async (ret) => {
                     await ret.wait().then(() => {
-                        message.success({ content: "提现成功", key: "emergencyWithdraw"})
+                        message.success({ content: "提现成功", key: "emergencyWithdraw" })
                     }).catch(() => {
-                        message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                        message.error({ content: "提现失败", key: "emergencyWithdraw" })
                     })
-                    
+
                 }).catch(() => {
-                    message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                    message.error({ content: "提现失败", key: "emergencyWithdraw" })
                 })
                 break;
             case 2:
                 await PlatformAddressContract.emergencyWithdraw(utils.parseEther(this.state.emergencyAmount_platform)).then(async (ret) => {
                     await ret.wait().then(() => {
-                        message.success({ content: "提现成功", key: "emergencyWithdraw"})
+                        message.success({ content: "提现成功", key: "emergencyWithdraw" })
                     }).catch(() => {
-                        message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                        message.error({ content: "提现失败", key: "emergencyWithdraw" })
                     })
-                    
+
                 }).catch(() => {
-                    message.error({ content: "提现失败", key: "emergencyWithdraw"})
+                    message.error({ content: "提现失败", key: "emergencyWithdraw" })
                 })
                 break;
         }
@@ -493,7 +550,7 @@ class Main extends Component {
             usersOfReferrer[i] = item;
         }
 
-        
+
         let members = [];
         for (let i = 0; i < usersOfReferrer.length; i++) {
             let userJoinTime = await BP106Proxy.userJoinTime(usersOfReferrer[i].account);
@@ -511,6 +568,9 @@ class Main extends Component {
 
     render() {
         let {
+            fourth_collapse,
+            thrid_collapse,
+            second_collapse,
             totalIncome,
             platform1AmountWithdraw,
             platform2AmountWithdraw,
@@ -585,10 +645,13 @@ class Main extends Component {
                     </div>
                 </div>
             </div>
-            <div className="row second">
-                <h4 className="second-title">
+            <div className="row second" style={{height:second_collapse ? "auto" : "50px"}}>
+                <h4 className="second-title" onClick={() => this.showCollapse(1)}>
                     <img src="./assets/icons/location.png" />
                     <span>当前排位 {serialNumber / 1}</span>
+                    <div style={{ float: "right", color: "#fff" }}>
+                        点击更多
+                    </div>
                 </h4>
                 <div className="buy_area">
                     <div className="buy_btn_box">
@@ -636,10 +699,13 @@ class Main extends Component {
                     <button className="copy_btn" onClick={this.cpLink} data-clipboard-text={window.location.host + window.location.pathname + "?inviter=" + account}>复制</button>
                 </div>
             </div>
-            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('./assets/images/bg1.png')" }}>
+            <div className="row" style={{backgroundSize: "cover", backgroundImage: "url('./assets/images/bg1.png')" }}>
                 <h4 className="second-title">
                     <img src="./assets/icons/crown.png" />
                     <span>奖池</span>
+                    {/* <div style={{ float: "right", color: "#fff" }}>
+                        点击更多
+                    </div> */}
                 </h4>
                 <p>
                     <div className="pool">
@@ -658,10 +724,13 @@ class Main extends Component {
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ backgroundSize: "cover", backgroundImage: "url('./assets/images/bg2.png')" }}>
-                <h4 className="second-title">
+            <div className="row" style={{height:fourth_collapse ? "auto" : "50px",  backgroundSize: "cover", backgroundImage: "url('./assets/images/bg2.png')" }}>
+                <h4 className="second-title" onClick={() => this.showCollapse(3)}>
                     <img src="./assets/icons/detail.png" style={{ width: "15px" }} />
                     <span>我的收益明细</span>
+                    <div style={{ float: "right", color: "#fff" }}>
+                        点击更多
+                    </div>
                 </h4>
 
                 <div className="item">
